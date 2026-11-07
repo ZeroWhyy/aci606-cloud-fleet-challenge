@@ -6,12 +6,13 @@ venv/
 .env
 
 # Models and generated data
-models/
 *.joblib
+!models/model.joblib
 *.keras
 *.h5
 data/*.csv
 !data/.gitkeep
+!data/training.csv
 
 # Local database
 *.db
@@ -21,3 +22,8 @@ data/*.csv
 # OS / editor
 .DS_Store
 .vscode/
+
+.pytest_cache/
+test-results/
+*.log
+*.bundle

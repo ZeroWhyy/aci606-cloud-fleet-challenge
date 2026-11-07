@@ -1,62 +1,57 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ACI606 Cloud Fleet Dashboard</title>
-  <style>
-    :root { font-family: Inter, system-ui, sans-serif; color-scheme: dark; }
-    body { margin: 0; background:#0d1117; color:#e6edf3; }
-    header { padding:22px 28px; border-bottom:1px solid #30363d; display:flex; justify-content:space-between; }
-    h1 { margin:0; font-size:22px; }
-    .tag { color:#8b949e; }
-    main { padding:28px; }
-    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-    .card { border:1px solid #30363d; border-radius:14px; padding:18px; background:#161b22; }
-    .robot { font-size:20px; font-weight:700; margin-bottom:12px; }
-    .row { display:flex; justify-content:space-between; padding:5px 0; color:#c9d1d9; }
-    .bar { height:8px; background:#30363d; border-radius:99px; overflow:hidden; margin-top:7px; }
-    .fill { height:100%; background:#58a6ff; }
-    .empty { padding:40px; text-align:center; color:#8b949e; border:1px dashed #30363d; border-radius:14px; }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cloud Fleet | Centro de operación</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#e8eef9;background:#0a101b;color-scheme:dark;--muted:#9aabc4;--line:#26334a;--green:#59d6af;--amber:#f6c268;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0}header{border-bottom:1px solid var(--line);padding:24px max(24px,calc((100vw - 1240px)/2));display:flex;justify-content:space-between;gap:20px;align-items:center;background:#0e1727}h1{font-size:25px;letter-spacing:-.7px;margin:5px 0}h2{font-size:18px;margin:0 0 8px}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#87aaff}.muted{color:var(--muted);font-size:13px}.pill{border:1px solid var(--line);padding:7px 11px;border-radius:7px;font-size:12px}.ok{color:var(--green)}.bad{color:var(--red)}main{max-width:1290px;padding:28px 24px 45px;margin:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}.stat,.card,.history{border:1px solid var(--line);border-radius:12px;background:#101b2d}.stat{padding:18px}.stat strong{display:block;font-size:28px;letter-spacing:-1px;margin:8px 0 3px}.heading{display:flex;justify-content:space-between;gap:12px;align-items:end;margin:25px 0 14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:16px}.card{padding:19px}.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.robot{font-size:20px;font-weight:650}.badge{font-size:11px;letter-spacing:.5px;border-radius:5px;padding:6px 8px;font-weight:700;background:#1e3046}.NORMAL{color:var(--green);background:#14352f}.WARNING{color:var(--amber);background:#3a3020}.CRITICAL{color:var(--red);background:#3e252d}.row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:#b4c3da}.row b{color:#e8eef9;font-weight:550}.bar{height:6px;border-radius:8px;background:#26334a;margin:7px 0 13px;overflow:hidden}.fill{height:100%;background:#729dfb}.sensors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.sensor{background:#0b1423;border-radius:7px;padding:10px;font-size:12px;color:var(--muted)}.sensor b{display:block;font-size:16px;font-weight:550;color:#e8eef9;margin-top:4px}button,select{font:inherit;border:1px solid #375078;border-radius:7px;color:#dce7fc;padding:9px 12px;background:#172941;cursor:pointer}button{width:100%;font-size:12px;margin-top:16px}button:hover{background:#233b5b}.empty{grid-column:1/-1;border:1px dashed #354560;border-radius:12px;padding:30px;text-align:center;color:var(--muted)}.history{padding:22px;margin-top:25px}.history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}canvas{display:block;width:100%;height:220px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:right;border-bottom:1px solid #26334a;padding:10px 7px}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-weight:500}.scroll{overflow:auto}footer{margin-top:22px;display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px}a{color:#a6c0ff}.error{padding:13px;border:1px solid #783f48;border-radius:8px;background:#321e29;color:#ffc1c1;margin-bottom:18px;display:none}@media(max-width:650px){header{align-items:start;padding:20px}.stats{grid-template-columns:1fr 1fr}.stat strong{font-size:23px}main{padding:20px 15px}.heading,footer{align-items:start;flex-direction:column}h1{font-size:22px}.pill{max-width:140px}}
+</style>
 </head>
 <body>
-<header>
-  <div><h1>Cloud Fleet Dashboard</h1><div class="tag">ACI606 · starter</div></div>
-  <div id="status" class="tag">esperando telemetría...</div>
-</header>
+<header><div><div class="eyebrow">ACI606 / Cloud Computing</div><h1>Cloud Fleet</h1><div class="muted">Centro de operación de flotas robóticas</div></div><div class="pill" id="service" role="status">Conectando…</div></header>
 <main>
-  <div id="cards" class="cards"></div>
+<div class="error" id="error" role="alert"></div>
+<div class="stats"><div class="stat"><span class="muted">Robots conectados</span><strong id="connected">—</strong><span class="muted" id="stored">sin datos</span></div><div class="stat"><span class="muted">Telemetría almacenada</span><strong id="records">—</strong><span class="muted" id="database">comprobando base</span></div><div class="stat"><span class="muted">Latencia de /predict</span><strong id="latency">—</strong><span class="muted">media del servidor · ms</span></div><div class="stat"><span class="muted">Servicio en ejecución</span><strong id="uptime">—</strong><span class="muted" id="errors">comprobando métricas</span></div></div>
+<div class="heading"><div><h2>Estado de la flota</h2><div class="muted">Última muestra, condición predicha y batería</div></div><div class="muted" id="updated">Actualización cada 3 segundos</div></div>
+<div class="cards" id="cards"></div>
+<section class="history" aria-label="Historial de telemetría"><div class="history-head"><div><h2 id="history-title">Historial por robot</h2><div class="muted" id="history-subtitle">Selecciona un robot para consultar su evolución.</div></div><select id="signal" aria-label="Sensor del gráfico"><option value="motor_temp">Temperatura (°C)</option><option value="battery">Batería (%)</option><option value="vibration">Vibración</option><option value="motor_current">Corriente (A)</option></select></div><canvas id="chart" role="img" aria-label="Evolución histórica del sensor seleccionado"></canvas><div class="scroll"><table><thead><tr><th>Hora de muestra</th><th>Condición</th><th>Batería</th><th>Temp.</th><th>Vibración</th></tr></thead><tbody id="history-rows"></tbody></table></div></section>
+<footer><span id="model">Esperando modelo</span><span><a href="/docs">Documentación API</a> · <a href="/metrics">Métricas JSON</a> · conexión activa: recepción hace menos de 30 s</span></footer>
 </main>
 <script>
-const cards = document.getElementById('cards');
-const statusEl = document.getElementById('status');
-
-function card(r) {
-  const battery = Math.max(0, Math.min(100, Number(r.battery)));
-  return `<div class="card">
-    <div class="robot">${r.robot_id}</div>
-    <div class="row"><span>Battery</span><span>${battery.toFixed(1)} %</span></div>
-    <div class="bar"><div class="fill" style="width:${battery}%"></div></div>
-    <div class="row"><span>Speed</span><span>${Number(r.speed).toFixed(2)}</span></div>
-    <div class="row"><span>Motor temp.</span><span>${Number(r.motor_temp).toFixed(1)} °C</span></div>
-    <div class="row"><span>Vibration</span><span>${Number(r.vibration).toFixed(2)}</span></div>
-    <div class="row"><span>Obstacle</span><span>${Number(r.obstacle_distance).toFixed(2)} m</span></div>
-  </div>`;
-}
-
-async function refresh() {
-  try {
-    const res = await fetch('/robots');
-    const robots = await res.json();
-    statusEl.textContent = `${robots.length} robot(s) conectados`;
-    cards.innerHTML = robots.length ? robots.map(card).join('') : '<div class="empty">Ejecuta el simulador para comenzar a recibir robots.</div>';
-  } catch (err) {
-    statusEl.textContent = 'API no disponible';
+const el=id=>document.getElementById(id);
+let selected=null, history=[], robots=[];
+const format=(v,d=1)=>Number(v).toLocaleString('es-CL',{maximumFractionDigits:d,minimumFractionDigits:d});
+function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n}
+async function get(path){const r=await fetch(path,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(path+' respondió HTTP '+r.status);return r.json()}
+function renderCards(){
+  el('cards').replaceChildren();
+  if(!robots.length){el('cards').append(node('div','empty','Esperando telemetría nueva. Ejecuta el cliente con la URL de este servicio.'));return}
+  for(const r of robots){
+    const c=node('article','card');const top=node('div','card-top');top.append(node('div','robot',r.robot_id),node('span','badge '+r.predicted_status,r.predicted_status));c.append(top);
+    const state=node('div','muted',r.connected?'● Recibiendo telemetría':'○ Sin recepción reciente');state.style.color=r.connected?'var(--green)':'var(--muted)';c.append(state);
+    for(const [label,value] of [['Confianza',format(r.confidence*100)+' %'],['Batería',format(r.battery)+' %']]){const row=node('div','row');row.append(node('span','',label),node('b','',value));c.append(row)}
+    const bar=node('div','bar'),fill=node('div','fill');fill.style.width=Math.min(100,Math.max(0,r.battery))+'%';bar.append(fill);c.append(bar);
+    const sensors=node('div','sensors');for(const [label,value] of [['Temp. motor',format(r.motor_temp)+' °C'],['Velocidad',format(r.speed,2)+' m/s'],['Vibración',format(r.vibration,3)],['Corriente',format(r.motor_current,2)+' A'],['Obstáculo',format(r.obstacle_distance,2)+' m'],['Registros',String(r.history_count)]]){const s=node('div','sensor',label);s.append(node('b','',value));sensors.append(s)}c.append(sensors);
+    c.append(node('div','muted','Posición ('+format(r.x,2)+', '+format(r.y,2)+') · '+new Date(r.timestamp*1000).toLocaleTimeString('es-CL')));
+    const button=node('button','',selected===r.robot_id?'Historial seleccionado':'Ver historial');button.onclick=async()=>{selected=r.robot_id;renderCards();try{await loadHistory()}catch(e){showError(e)}};c.append(button);el('cards').append(c);
   }
 }
-refresh();
-setInterval(refresh, 1500);
+async function loadHistory(){
+  if(!selected)return;history=await get('/robots/'+encodeURIComponent(selected)+'/history?limit=120');
+  const r=robots.find(r=>r.robot_id===selected);el('history-title').textContent='Historial · '+selected;el('history-subtitle').textContent='Últimas '+history.length+' muestras de '+(r?.history_count??history.length)+' almacenadas. El historial completo está disponible en la API.';
+  el('history-rows').replaceChildren();for(const r of history.slice(-6).reverse()){const tr=node('tr');for(const value of [new Date(r.timestamp*1000).toLocaleString('es-CL'),r.predicted_status,format(r.battery)+' %',format(r.motor_temp)+' °C',format(r.vibration,3)])tr.append(node('td','',value));el('history-rows').append(tr)}draw();
+}
+function draw(){
+  const canvas=el('chart'),box=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;canvas.width=Math.round(box.width*dpr);canvas.height=220*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);const w=box.width,h=220;ctx.clearRect(0,0,w,h);
+  if(!history.length){ctx.fillStyle='#9aabc4';ctx.font='13px system-ui';ctx.fillText('Sin muestras para graficar',20,90);return}
+  const values=history.map(r=>Number(r[el('signal').value]));let min=Math.min(...values),max=Math.max(...values);const pad=Math.max((max-min)*.15,.05);min-=pad;max+=pad;const left=52,right=w-15,top=15,bottom=h-33;
+  ctx.font='11px system-ui';for(let i=0;i<=4;i++){const y=top+(bottom-top)*i/4;ctx.strokeStyle='#26334a';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillStyle='#9aabc4';ctx.fillText(format(max-(max-min)*i/4,1),4,y+4)}
+  const first=history[0].timestamp,last=history.at(-1).timestamp;
+  ctx.strokeStyle='#86acff';ctx.lineWidth=2;ctx.beginPath();values.forEach((v,i)=>{const x=left+(right-left)*(last===first?(values.length===1?.5:i/(values.length-1)):(history[i].timestamp-first)/(last-first)),y=bottom-(v-min)/(max-min)*(bottom-top);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);if(values.length===1){ctx.arc(x,y,3,0,2*Math.PI)}});ctx.stroke();ctx.fillStyle='#9aabc4';ctx.fillText(new Date(first*1000).toLocaleTimeString('es-CL'),left,h-10);ctx.textAlign='right';ctx.fillText(new Date(last*1000).toLocaleTimeString('es-CL'),right,h-10);ctx.textAlign='left';
+}
+function showError(e){el('service').textContent='API no disponible';el('service').className='pill bad';el('error').style.display='block';el('error').textContent='No se pudieron actualizar los datos: '+e.message+'. Reintentando automáticamente.'}
+async function refresh(){try{const [health,m,r]=await Promise.all([get('/health'),get('/metrics'),get('/robots')]);robots=r;el('service').textContent='● Servicio activo';el('service').className='pill ok';el('error').style.display='none';el('connected').textContent=r.filter(v=>v.connected).length;el('stored').textContent=r.length+' robots registrados';el('records').textContent=Number(m.telemetry_records).toLocaleString('es-CL');el('database').textContent='Persistencia: '+health.storage;el('latency').textContent=format(m.average_prediction_latency_ms,2);el('uptime').textContent=format(m.uptime_seconds/60,1)+' min';el('errors').textContent=m.errors+' errores HTTP desde el arranque';el('model').textContent='Modelo '+health.model_version+' · confianza sin calibrar';el('updated').textContent='Actualizado '+new Date().toLocaleTimeString('es-CL');if(!selected&&r.length)selected=r[0].robot_id;renderCards();await loadHistory()}catch(e){showError(e)}finally{setTimeout(refresh,3000)}}
+el('signal').onchange=draw;window.addEventListener('resize',draw);refresh();
 </script>
-</body>
-</html>
+</body></html>

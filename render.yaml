@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: aci606-cloud-fleet-challenge
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.12
+      - key: MODEL_PATH
+        value: models/model.joblib
+      - key: DATABASE_URL
+        sync: false

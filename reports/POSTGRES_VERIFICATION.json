@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "scope": "actual local PostgreSQL server, real psycopg TCP connections and real Uvicorn HTTP; not Neon/Render",
+  "postgres_version": "PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 10.2.1 20210130 (Red Hat 10.2.1-11), 64-bit",
+  "initial_telemetry_rows": 0,
+  "training_csv_present_at_runtime": false,
+  "new_samples_sent_to_http_api": 125,
+  "rows_verified_independently_in_postgresql": 125,
+  "api_record_ids_match_sql_ids": true,
+  "api_history_matches_sql_ids": true,
+  "standalone_client_executed": true,
+  "standalone_client_added_rows": 6,
+  "roundtrip_probe_added_and_read_back_rows": 3,
+  "final_smoke_test_passed": true,
+  "rows_before_api_restart": 259,
+  "rows_after_api_restart": 259,
+  "sha256_before_restart": "08faab678d562bc72ff7ee2bd80f32870a9dada355ec82c6238e35081b9d2205",
+  "sha256_after_restart": "08faab678d562bc72ff7ee2bd80f32870a9dada355ec82c6238e35081b9d2205",
+  "new_api_process_after_restart": true,
+  "neon_account_connected": false,
+  "render_deployed": false
+}

@@ -1,0 +1,3 @@
+model,validation_f1_macro,training_seconds
+LogisticRegression,0.9223475393788118,0.0761
+RandomForest,0.9158993191622319,2.3243

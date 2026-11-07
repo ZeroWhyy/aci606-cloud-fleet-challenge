@@ -1,0 +1,112 @@
+{
+  "api": "http://127.0.0.1:49627",
+  "final": true,
+  "checks": [
+    {
+      "name": "health",
+      "passed": true
+    },
+    {
+      "name": "persistent ingestion",
+      "passed": true
+    },
+    {
+      "name": "robot list",
+      "passed": true
+    },
+    {
+      "name": "history",
+      "passed": true
+    },
+    {
+      "name": "metrics",
+      "passed": true
+    },
+    {
+      "name": "dashboard",
+      "passed": true
+    },
+    {
+      "name": "prediction contract",
+      "passed": true
+    },
+    {
+      "name": "complete history exceeds 100 rows",
+      "passed": true,
+      "rows": 125
+    },
+    {
+      "name": "/predict invalid case 1 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/predict invalid case 2 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/predict invalid case 3 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/predict invalid case 4 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/predict invalid case 5 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/predict invalid case 6 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 1 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 2 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 3 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 4 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 5 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "/telemetry invalid case 6 is 4xx",
+      "passed": true,
+      "status": 422
+    },
+    {
+      "name": "40 concurrent predictions / 8 clients",
+      "passed": true,
+      "requests": 40,
+      "workers": 8,
+      "client_p50_ms": 10.391,
+      "client_p95_ms": 12.874
+    },
+    {
+      "name": "service healthy after invalid data and load",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

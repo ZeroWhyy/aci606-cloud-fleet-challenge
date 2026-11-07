@@ -1,180 +1,172 @@
-# ACI606 - Cloud Fleet Challenge
+# ACI606 - Cloud Fleet: API con escritura en PostgreSQL
 
-Starter repository for **Exercise 4** of ACI606 Cloud Computing.
+**URL pública: PENDIENTE.** Reemplaza esta línea con la URL real de Render después del despliegue.
 
-## Repository name
+Este repositorio contiene el SERVIDOR. El cliente de robots se ejecuta aparte y envía muestras nuevas por HTTP. Cada muestra aceptada se confirma en PostgreSQL antes de devolver su `record_id`. El panel consulta esa misma base a través de la API.
 
-Use:
+## Cómo se comunican las partes
 
-`aci606-cloud-fleet-challenge`
+| Parte | Acción |
+|---|---|
+| Cliente / simulador | Genera una muestra NUEVA y llama POST /telemetry en Render |
+| API en Render | Valida, ejecuta el modelo, hace INSERT y COMMIT en PostgreSQL de Neon |
+| Respuesta de la API | Devuelve accepted=true, stored=true y el record_id que asignó PostgreSQL |
+| Historial / panel | Hace SELECT en PostgreSQL y devuelve los registros persistidos |
+| Modelo ML | Lee model.joblib para predecir; no usa un CSV como base operativa |
 
-## The idea in one sentence
+**No hay telemetría precargada.** Una base nueva empieza vacía. `data/training.csv` no se incluye en la entrega de despliegue. Los datos sintéticos de entrenamiento se generan únicamente si ejecutas los scripts ML opcionales.
 
-A virtual fleet sends telemetry to a remote platform. Your group must transform the starter into a **persistent Cloud service** that stores the data, trains and serves an ML model, exposes metrics, and presents the fleet in a dashboard.
+## 1. Subir los archivos a tu GitHub
 
-## What is already provided
+1. Extrae `Cloud_Fleet_Completo.zip`. Debes ver directamente `app`, `dashboard`, `models`, `requirements.txt` y `render.yaml`.
+2. Haz un fork del [starter del profesor](https://github.com/DrOscarL/aci606-cloud-fleet-challenge), o abre tu copia si ya existe.
+3. Crea una rama llamada `feature/plataforma-cloud` desde `main`.
+4. En esa rama entra a **Add file > Upload files**. Arrastra el CONTENIDO del ZIP extraído, conservando las carpetas. No subas el ZIP comprimido ni una carpeta contenedora adicional.
+5. Confirma los cambios, por ejemplo con el mensaje `Implement persistent API, inference and live telemetry`.
+6. Abre un pull request desde esa rama hacia `main` de TU repositorio y usa **Create a merge commit / Merge pull request**. Así la rama y el merge quedan en tu historial real.
 
-- Virtual multi-robot fleet simulator.
-- Labelled dataset generator.
-- FastAPI starter service.
-- Working endpoints `/health`, `/telemetry`, `/robots` and a RAM-only `/history`.
-- Minimal web dashboard at `/dashboard`.
-- Training script skeleton.
-- Smoke test.
+En `main`, verifica `app/main.py`, `app/db.py`, `models/model.joblib` y `models/metadata.json`. El modelo debe estar en Git: es pequeño y ya está entrenado. No se requiere importar un bundle.
 
-## What your group must build
+Si GitHub no reemplaza un archivo por estar idéntico, es normal; si muestra un error de carga, resuélvelo antes de desplegar. Con el ZIP completo son menos de 100 archivos y ninguno se acerca al límite por archivo del navegador.
 
-### 1. Persistent ingestion
-Replace the starter RAM storage with persistent storage. The service must not lose the complete history when a client disconnects.
+## 2. Crear la base en Neon
 
-Required endpoints:
+1. Entra a https://console.neon.tech y crea un proyecto.
+2. Abre **Connect** y copia la conexión PostgreSQL completa, empezando por `postgresql://`.
+3. Conserva `sslmode=require` y los demás parámetros que Neon entregue. Puedes usar la conexión con pooling.
+4. La contraseña va SOLO en la variable `DATABASE_URL` de Render; no en GitHub, ni en el cliente.
 
-- `GET /health`
-- `POST /telemetry`
-- `GET /robots`
-- `GET /robots/{robot_id}/history`
+No se importa un CSV. Al arrancar, la API crea automáticamente la tabla `telemetry` vacía. `neon/verificar_datos.sql` contiene consultas para comprobar las muestras después de enviarlas.
 
-### 2. ML training
-Generate or collect a training dataset, perform EDA, compare at least two classifiers, justify the final choice, and save a reproducible model pipeline.
+## 3. Conectar Render con GitHub y Neon
 
-Target classes:
+En https://dashboard.render.com selecciona **New > Web Service**, conecta TU repositorio y configura:
 
-- `NORMAL`
-- `WARNING`
-- `CRITICAL`
+| Campo | Valor |
+|---|---|
+| Runtime | Python 3 |
+| Branch | main |
+| Root Directory | Vacío; app/ y requirements.txt deben estar en la raíz |
+| Build Command | pip install -r requirements.txt |
+| Start Command | uvicorn app.main:app --host 0.0.0.0 --port $PORT |
+| Health Check Path | /health |
+| Plan | Free, si está disponible |
+| Auto Deploy | Activado para main |
 
-Minimum evidence:
+Variables de entorno:
 
-- class distribution;
-- confusion matrix;
-- macro F1;
-- train/test separation;
-- technical justification of the selected model.
+| Clave | Valor |
+|---|---|
+| PYTHON_VERSION | 3.12.12 |
+| MODEL_PATH | models/model.joblib |
+| DATABASE_URL | La cadena REAL y COMPLETA de Neon |
 
-### 3. Cloud inference service
-Implement:
+La API acepta la URL original de Neon y selecciona psycopg 3 automáticamente. Si falta `DATABASE_URL`, el arranque falla con un mensaje claro: ya no se cambia silenciosamente a una base local. En Render se exige PostgreSQL.
 
-`POST /predict`
+Despliega y espera a que aparezca activo. Abre `https://TU-SERVICIO.onrender.com/health`. Debe devolver `status: ok`, `database: ok`, `storage: postgresql` y `version: 1.1.0`. Después abre `/dashboard`. Al inicio estará vacío hasta recibir muestras.
 
-Input contract:
+## 4. Ejecutar el cliente y enviar datos nuevos
 
-```json
-{
-  "robot_id": "R03",
-  "timestamp": 1780000000.0,
-  "x": 4.21,
-  "y": 7.82,
-  "speed": 0.63,
-  "battery": 71.0,
-  "motor_temp": 48.2,
-  "vibration": 0.43,
-  "motor_current": 3.7,
-  "obstacle_distance": 0.42
-}
-```
+Descarga y extrae el archivo separado `Cloud_Fleet_Cliente.zip` en tu PC.
 
-Required response contract:
+1. Abre `API_URL.txt` con Bloc de notas y pega solo tu URL BASE de Render, sin `/dashboard` ni `/health`.
+2. Ejecuta `INICIAR_CLIENTE_WINDOWS.bat`. Requiere Python 3.10 o superior; prepara un entorno con requests.
+3. El cliente genera muestras nuevas y las envía a la API. Cada respuesta debe mostrar `guardado id=... estado=...`.
+4. Abre el dashboard de tu URL de Render y comprueba que aumenta el número de muestras.
 
-```json
-{
-  "robot_id": "R03",
-  "predicted_status": "WARNING",
-  "confidence": 0.87,
-  "model_version": "v1",
-  "inference_ms": 12.4
-}
-```
-
-### 4. Dashboard
-Extend `/dashboard` so that an operator can see, at minimum:
-
-- connected robots;
-- most recent telemetry;
-- predicted condition;
-- battery;
-- at least one historical or aggregate indicator;
-- API/service status.
-
-### 5. Observability
-Extend `GET /metrics` with meaningful operational data. At minimum:
-
-- number of telemetry requests;
-- number of prediction requests;
-- errors;
-- average prediction latency;
-- service uptime or equivalent operational indicator.
-
-### 6. Git traceability
-Your repository must show real development history:
-
-- meaningful commits;
-- at least one feature branch;
-- merge into `main`;
-- README describing how to run the system.
-
-### 7. Remote execution
-The final system must be remotely consumable. A purely local notebook is not a Cloud solution.
-
-## Quick start
-
-### A. Create environment
+También puedes usar una terminal dentro de la carpeta del cliente:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python cliente.py --api https://TU-SERVICIO.onrender.com --robots 6
 ```
 
-In Codespaces you can normally use the existing Python environment instead of creating another one.
-
-### B. Start the API
+El simulador original del profesor sigue siendo compatible; desde este repositorio funciona así:
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python simulator/fleet_simulator.py --api https://TU-SERVICIO.onrender.com --robots 6 --timeout 120
 ```
 
-Open:
+No necesitas subir el cliente a Render. Mientras envía datos debe estar ejecutándose en tu PC o Codespaces. Al detenerlo dejan de llegar muestras, pero las confirmadas permanecen en Neon.
 
-- `/docs`
-- `/dashboard`
+## 5. Demostrar escritura y lectura de los mismos datos
 
-### C. Start the virtual fleet
-
-In another terminal:
+En la carpeta del cliente ejecuta `PROBAR_CONEXION_WINDOWS.bat`, o:
 
 ```bash
-python simulator/fleet_simulator.py --api http://127.0.0.1:8000 --robots 5
+python probar_conexion.py --api https://TU-SERVICIO.onrender.com
 ```
 
-The dashboard should begin to show robots.
+La prueba exige PostgreSQL, crea un robot único, confirma que antes no existe, envía tres muestras por POST, recibe sus IDs y recupera las tres por GET. Compara cada valor y cada ID, y verifica que `/predict` calcula sin insertar telemetría. Guarda `resultado_conexion.json` e imprime una consulta SQL con el robot `CHK-...` real.
 
-### D. Generate training data
+Copia esa consulta en **Neon > SQL Editor**. Deben aparecer los mismos tres IDs que mostró el cliente. Esta es la comprobación visible de cliente -> API -> Neon -> API -> cliente.
+
+El script también está en este repositorio:
 
 ```bash
-python simulator/generate_dataset.py --samples 3000
-python ml/train_model.py
+python scripts/probar_conexion.py --api https://TU-SERVICIO.onrender.com --output test-results/conexion_publica.json
 ```
 
-`train_model.py` is intentionally incomplete.
+## 6. Prueba final y reinicio remoto
 
-## First checkpoint - end of kickoff class
+Desde Codespaces o una terminal con las dependencias del servidor:
 
-Your group should have:
+```bash
+python tests/smoke_test.py --api https://TU-SERVICIO.onrender.com --final --output test-results/smoke_publico.json
+python tests/persistence_check.py --api https://TU-SERVICIO.onrender.com --phase before
+```
 
-- repository cloned/open in Codespaces;
-- API running;
-- simulator connected;
-- `/dashboard` showing multiple robots;
-- first meaningful Git commit;
-- feature branch created;
-- responsibilities divided within the group.
+El primer comando exige inferencia, historial de 125 muestras, rechazo de entradas inválidas y concurrencia. El segundo guarda cantidad y hash de 125 registros de un robot único.
 
-## Final challenge
+Reinicia el servicio en Render con **Restart service**, espera que `/health` responda y ejecuta:
 
-The instructor may evaluate your service using an unseen fleet scenario. The assessment can consider functionality, prediction quality, latency, robustness and the technical defence of the architecture.
+```bash
+python tests/persistence_check.py --api https://TU-SERVICIO.onrender.com --phase after
+```
 
-## Important
+Debe indicar PASS y conservar el historial. Mantén el archivo local `test-results/persistence.json` entre ambas fases. Guarda evidencia real del reinicio y del resultado. Abre el panel desde otro dispositivo y revisa `/metrics` y los logs de Render.
 
-The robot simulator is **not** the deliverable. It is a client/load generator.
+## 7. Dejar el repositorio listo para entregar
 
-The deliverable is the **Cloud platform** your group builds around it.
+Cambia la URL pendiente del README por la real. Agrega evidencia remota y haz un commit significativo adicional. No incluyas la cadena de conexión de Neon. La plantilla `ENTREGA_CHECKLIST.md` marca la parte remota como pendiente hasta que la ejecutes.
+
+El código fue preparado con asistencia de Codex. La rama, el commit de carga, el merge y los cambios de configuración de tu repositorio se crean realmente al seguir estos pasos; no se adjunta un historial de estudiante inventado.
+
+## Rutas y significado
+
+| Ruta | Función |
+|---|---|
+| GET /health | Verifica conexión a la base y estado del modelo |
+| POST /telemetry | Recibe y GUARDA una muestra nueva, con predicción y versión |
+| GET /robots | Lee de la base la última muestra por robot |
+| GET /robots/{id}/history | Lee el historial COMPLETO de la base; sin tope de 100 |
+| POST /predict | Predice una muestra recibida; no la almacena |
+| GET /metrics | Solicitudes, errores, latencias, uptime y número de registros en PostgreSQL |
+| GET /dashboard | Panel con datos consultados a la API |
+| GET /docs | Documentación interactiva |
+
+## Modelo y reproducción opcional
+
+El Pipeline `models/model.joblib` se carga una vez al arrancar. El entrenamiento usó 14.400 muestras de 40 flotas y GroupShuffleSplit por fleet_id (24/8/8 flotas para train/validation/test). Se compararon regresión logística (F1 macro validación 0,9223) y Random Forest (0,9159). Ganó regresión logística, con F1 macro reservado 0,9417 frente a 0,1718 de la línea base mayoritaria.
+
+Los informes de EDA, comparación y matriz están en `reports/`. Son resultados de entrenamiento sintético, separados de la telemetría operativa. Para reproducirlos, opcionalmente:
+
+```bash
+python ml/generate_fleets.py --fleets 40 --robots 6 --steps 60 --seed 606
+python ml/train_model.py --seed 606 --version v1
+```
+
+Estos comandos NO se ejecutan durante el despliegue ni cuando la API recibe peticiones. La API no importa el CSV a PostgreSQL y no lo consulta para mostrar robots.
+
+## Verificación del paquete
+
+Se ejecutan pruebas de contrato y una comprobación con PostgreSQL real local. El detalle del ensayo está en `reports/POSTGRES_VERIFICATION.json`: base inicialmente vacía, muestras nuevas por HTTP, lectura independiente por SQL y persistencia tras reiniciar la API. No es una cuenta Neon ni un servicio Render ya desplegado; esa comprobación remota se realiza con tu URL y los pasos anteriores.
+
+Pruebas automatizadas:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Fuentes: pauta adjunta, starter del docente, [Render FastAPI](https://render.com/docs/deploy-fastapi), [Neon SQLAlchemy](https://neon.com/docs/guides/sqlalchemy) y [GitHub: subir archivos](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository).
